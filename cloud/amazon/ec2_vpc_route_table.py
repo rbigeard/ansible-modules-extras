@@ -16,10 +16,10 @@
 DOCUMENTATION = '''
 ---
 module: ec2_vpc_route_table
-version_added: 2.2
 short_description: Manage route tables for AWS virtual private clouds
 description:
     - Manage route tables for AWS virtual private clouds
+version_added: "2.0"
 author: Robert Estelle (@erydo), Rob White (@wimnat)
 options:
   lookup:
