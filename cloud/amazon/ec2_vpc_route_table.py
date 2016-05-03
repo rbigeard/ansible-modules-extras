@@ -62,6 +62,9 @@ options:
     description:
       - "VPC ID of the VPC in which to create the route table."
     required: true
+  purge_tables:
+    description:
+      - "If set to true, existing associations will be purged"
 extends_documentation_fragment:
     - aws
     - ec2
@@ -366,7 +369,9 @@ def ensure_subnet_association(vpc_conn, vpc_id, route_table_id, subnet_id,
 
 
 def ensure_subnet_associations(vpc_conn, vpc_id, route_table, subnets,
-                               check_mode):
+                               check_mode, module):
+    purge_tables = module.params.get('purge_tables')
+
     current_association_ids = [a.id for a in route_table.associations]
     new_association_ids = []
     changed = False
@@ -379,11 +384,12 @@ def ensure_subnet_associations(vpc_conn, vpc_id, route_table, subnets,
         new_association_ids.append(result['association_id'])
 
     to_delete = [a_id for a_id in current_association_ids
-                 if a_id not in new_association_ids]
+                if a_id not in new_association_ids]
 
-    for a_id in to_delete:
-        changed = True
-        vpc_conn.disassociate_route_table(a_id, dry_run=check_mode)
+    if purge_tables == 'True':
+        for a_id in to_delete:
+            changed = True
+            vpc_conn.disassociate_route_table(a_id, dry_run=check_mode)
 
     return {'changed': changed}
 
@@ -546,7 +552,7 @@ def ensure_route_table_present(connection, module):
             )
 
         try:
-            result = ensure_subnet_associations(connection, vpc_id, route_table, associated_subnets, module.check_mode)
+            result = ensure_subnet_associations(connection, vpc_id, route_table, associated_subnets, module.check_mode, module)
             changed = changed or result['changed']
         except EC2ResponseError as e:
             raise AnsibleRouteTableException(
@@ -568,7 +574,8 @@ def main():
             state = dict(default='present', choices=['present', 'absent']),
             subnets = dict(default=None, required=False, type='list'),
             tags = dict(default=None, required=False, type='dict', aliases=['resource_tags']),
-            vpc_id = dict(default=None, required=True)
+            vpc_id = dict(default=None, required=True),
+            purge_tables = dict(default=True, required=False)
         )
     )
 
