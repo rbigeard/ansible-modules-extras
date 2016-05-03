@@ -16,7 +16,7 @@
 DOCUMENTATION = '''
 ---
 module: ec2_vpc_route_table
-version_added: "2.2"
+version_added: 2.2
 short_description: Manage route tables for AWS virtual private clouds
 description:
     - Manage route tables for AWS virtual private clouds
@@ -65,6 +65,7 @@ options:
   purge_tables:
     description:
       - "If set to true, existing associations will be purged"
+    version_added: 2.2
 extends_documentation_fragment:
     - aws
     - ec2
